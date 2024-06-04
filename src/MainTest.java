@@ -61,6 +61,43 @@ class ObjectChildWithSet extends ObjectBase {
     }
 }
 
+
+class A {
+    List<Integer> list;
+
+    public A(List<Integer> list) {
+        this.list = list;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        A a = (A) obj;
+        return list.equals(a.list);
+    }
+}
+
+class B {
+    A a;
+    B b;
+
+    public B(A a, B b) {
+        this.a = a;
+        this.b = b;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        B b1 = (B) obj;
+        boolean a_eq = (a == null && b1.a == null) || (a != null && a.equals(b1.a));
+        boolean b_eq = (b == null && b1.b == null) || (b != null && b.equals(b1.b));
+        return a_eq && b_eq;
+    }
+}
+
 class MainTest {
 
     @org.junit.jupiter.api.Test
@@ -173,5 +210,27 @@ class MainTest {
         assertEquals(object, copiedObject);
         object.number = 23;
         assertNotEquals(object, copiedObject);
+    }
+
+
+    @org.junit.jupiter.api.Test
+    void copyRecursiveObject() {
+        List<Integer> list = new ArrayList<>();
+        list.add(1);
+        list.add(2);
+        list.add(3);
+        A a = new A(list);
+        B b = new B(a, null);
+        a = new A(list);
+        b = new B(a, b);
+        B copiedB = null;
+        try {
+            copiedB = Main.deepCopy(b);
+        } catch (Exception e) {
+            fail("The method should not throw exceptions", e);
+        }
+        assertEquals(b, copiedB);
+        b.b.a.list.add(42);
+        assertNotEquals(b, copiedB);
     }
 }
